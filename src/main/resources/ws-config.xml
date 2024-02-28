@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:util="http://www.springframework.org/schema/util"
+  	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+	http://www.springframework.org/schema/beans/spring-beans.xsd
+	http://www.springframework.org/schema/util
+    http://www.springframework.org/schema/util/spring-util.xsd">
+	<bean id="messageFactory"
+		class="org.springframework.ws.soap.saaj.SaajSoapMessageFactory">
+		<!-- <property name="payloadCaching" value="true" /> -->
+	</bean>
+
+	<!-- Object/XML Marshaller used by endpoints and Jaxb2Helper -->
+	<bean id="jaxb2Marshaller" class="org.springframework.oxm.jaxb.Jaxb2Marshaller">
+		<property name="contextPath" value="org.springframework.ws.samples.echo.schema" />
+		<property name="schema" value="classpath:/echo.xsd" />
+		
+		<property name="marshallerProperties">
+			<map>
+				<entry key="jaxb.encoding">
+					<value>US-ASCII</value>
+				</entry>
+				<entry key="jaxb.formatted.output">
+					<value type="boolean">true</value>
+				</entry>
+				<entry key="jaxb.fragment">
+					<value type="boolean">true</value>
+				</entry>
+			</map>
+		</property>
+		
+		<property name="mtomEnabled" value="true" />
+	</bean>
+
+	<!-- State Post Endpoint -->
+	<bean id="echoEndpoint" class="org.springframework.ws.samples.echo.ws.EchoEndpoint">
+	</bean>
+	<!-- State Post Endpoint mapping -->
+	<bean
+		class="org.springframework.ws.soap.server.endpoint.mapping.SoapActionEndpointMapping">
+		<property name="mappings">
+			<props>
+				<prop key="postEchoRequest">
+					echoEndpoint
+				</prop>
+			</props>
+		</property>
+		
+		<property name="interceptors">
+			<list>
+				<ref bean="wsSecurityInterceptor" />
+				<bean class="org.springframework.ws.server.endpoint.interceptor.PayloadLoggingInterceptor" />
+			</list>
+		</property>
+		
+	</bean>
+
+	<bean id="wsSecurityInterceptor" 
+	  class="org.springframework.ws.soap.security.wss4j2.Wss4jSecurityInterceptor">
+		<property name="securementActions" value="Timestamp Signature Encrypt" />
+	  <property name="securementSignatureParts"
+	     value="{}{http://schemas.xmlsoap.org/soap/envelope/}Body; {}{http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd}Timestamp" />
+	  <property name="securementEncryptionParts"
+	     value="{Content}{http://schemas.xmlsoap.org/soap/envelope/}Body"/>
+		<property name="securementUsername" value="test-server" />
+	  <property name="securementPassword" value="keypass" />
+		<property name="securementSignatureCrypto" ref="cryptoFactoryBean"/>
+		<property name="securementSignatureKeyIdentifier" value="IssuerSerial" />
+	  <property name="securementEncryptionUser" value="useReqSigCert" />
+	  <property name="securementEncryptionCrypto" ref="cryptoFactoryBean"/>
+	  <property name="timestampPrecisionInMilliseconds" value="true" />
+	  <property name="timestampStrict" value="false" />
+	  <property name="securementTimeToLive" value="900" /> 
+	  <property name="validationTimeToLive" value="900" />
+	  <property name="enableSignatureConfirmation" value="false" />
+	  
+		<property name="validationActions" value="Signature Encrypt Timestamp" />
+	  <property name="validationSignatureCrypto" ref="cryptoFactoryBean"/>
+	  <property name="validationDecryptionCrypto" ref="cryptoFactoryBean"/>
+		<property name="validationCallbackHandler">
+	    <bean	class="org.springframework.ws.soap.security.wss4j2.callback.KeyStoreCallbackHandler">
+	    	<property name="privateKeyPassword" value="keypass" />
+	    </bean>
+		</property>
+	</bean>
+	<bean id="cryptoFactoryBean" class="org.springframework.ws.soap.security.wss4j2.support.CryptoFactoryBean">
+	  <property name="keyStorePassword" value="storepass" />
+	  <property name="keyStoreLocation" value="classpath:/test-server.jks" />
+	</bean>
+
+</beans>
