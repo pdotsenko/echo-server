@@ -57,7 +57,7 @@
 	</bean>
 
 	<bean id="wsSecurityInterceptor" 
-	  class="org.springframework.ws.soap.security.wss4j2.Wss4jSecurityInterceptor">
+	  class="org.springframework.ws.samples.echo.ws.EchoWsSecurityInterceptor">
 		<property name="securementActions" value="Timestamp Signature Encrypt" />
 	  <property name="securementSignatureParts"
 	     value="{}{http://schemas.xmlsoap.org/soap/envelope/}Body; {}{http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd}Timestamp" />
